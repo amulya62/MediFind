@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaNet Pro | Smart Pharmacy Network</title>
+    
+    <!-- Tailwind CSS (via CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, .font-title {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* --- 1. LIGHT THEME (Default) --- */
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, rgba(243, 244, 246, 0.8) 0%, rgba(229, 231, 235, 0.8) 100%), 
+                        url('https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background 0.5s ease, color 0.3s ease;
+        }
+
+        /* Frosted Glassmorphism Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 10px 30px -5px rgba(31, 38, 135, 0.08);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, background 0.3s ease, border 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(31, 38, 135, 0.15);
+        }
+
+        /* Glowing Red Pulse for Expired/Danger Items */
+        @keyframes pulse-red {
+            0%, 100% {
+                border-color: rgba(239, 68, 68, 0.4);
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+            }
+            50% {
+                border-color: rgba(239, 68, 68, 1);
+                box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);
+            }
+        }
+        .danger-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Glass Sidebar */
+        aside {
+            background: rgba(15, 23, 42, 0.85) !important;
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- 2. DARK THEME --- */
+        body.dark-mode {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%), 
+                        url('https://images.unsplash.com/photo-1579152276503-34e85743b679?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .dark-mode .glass-card {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode aside {
+            background: rgba(2, 6, 23, 0.93) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Scrollbar custom style */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
+    </style>
+</head>
+<body class="flex overflow-hidden text-slate-800 dark:text-slate-100">
+
+    <!-- ============================================ -->
+    <!-- 1. TOAST NOTIFICATION CONTAINER -->
+    <!-- ============================================ -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full"></div>
+
+    <!-- ============================================ -->
+    <!-- 2. AUTHENTICATION SECTION (Signup/Login Modal) -->
+    <!-- ============================================ -->
+    <div id="authSection" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md z-40 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100 dark:border-slate-800/80 text-center relative overflow-hidden transition-all duration-300">
+            <!-- Glow background highlights -->
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+            
+            <span class="text-indigo-600 dark:text-indigo-400 font-black text-xs uppercase tracking-[0.3em] mb-2 block">PharmaNet Pro</span>
+            <h2 id="authTitle" class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">Welcome Back</h2>
+            <p id="authSubtitle" class="text-slate-400 dark:text-slate-400 text-sm mb-8">Access your personalized pharmacy panel securely.</p>
+
+            <form id="authForm" class="space-y-4 text-left">
+                <!-- Registration Fields (hidden by default during Login mode) -->
+                <div id="registerFields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Full Name</label>
+                        <input type="text" id="regName" placeholder="Dr. Amulya Gowda" class="w-full p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm dark:text-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Select Account Type</label>
+                        <select id="regRole" class="w-full p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm dark:text-white transition-all">
+                            <option value="customer">I am a Customer</option>
+                            <option value="pharmacy">I am a Pharmacy Owner</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Shared Credentials -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+                    <input type="email" id="email" placeholder="name@domain.com" class="w-full p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm dark:text-white transition-all" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm dark:text-white transition-all" required>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-500/20 active:scale-[0.98]">
+                    Continue <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </button>
+            </form>
+
+            <p onclick="toggleAuth()" id="toggleText" class="text-center mt-6 text-indigo-600 dark:text-indigo-400 cursor-pointer text-sm font-bold hover:underline">
+                Need an account? Signup
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 3. DASHBOARD MAIN INTERFACE -->
+    <!-- ============================================ -->
+    
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 text-white min-h-screen p-6 flex flex-col justify-between hidden md:flex shrink-0">
+        <div>
+            <!-- Branding Header -->
+            <div class="flex items-center gap-3 mb-10 px-2">
+                <div class="bg-indigo-500/20 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
+                    <i class="fas fa-notes-medical text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-wide leading-none">PharmaNet</h1>
+                    <span class="text-[9px] font-bold text-slate-400 tracking-wider">PRO VERSION 2.0</span>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="space-y-1.5">
+                <button onclick="showSection('inventory')" id="navInventory" class="w-full text-left p-3.5 rounded-2xl hover:bg-slate-800/40 text-slate-300 hover:text-white font-medium text-sm transition flex items-center gap-3 border border-transparent hover:border-slate-800">
+                    <i class="fas fa-cubes text-base opacity-75"></i> Medicine Shelf
+                </button>
+                <button onclick="showSection('history')" id="navHistory" class="w-full text-left p-3.5 rounded-2xl hover:bg-slate-800/40 text-slate-300 hover:text-white font-medium text-sm transition flex items-center gap-3 border border-transparent hover:border-slate-800 hidden">
+                    <i class="fas fa-history text-base opacity-75"></i> Purchase Log
+                </button>
+                <button onclick="showSection('analytics')" id="navAnalytics" class="w-full text-left p-3.5 rounded-2xl hover:bg-slate-800/40 text-slate-300 hover:text-white font-medium text-sm transition flex items-center gap-3 border border-transparent hover:border-slate-800 hidden">
+                    <i class="fas fa-chart-pie text-base opacity-75"></i> Shelf Insights
+                </button>
+                <button onclick="showSection('feedback')" id="navFeedback" class="w-full text-left p-3.5 rounded-2xl hover:bg-slate-800/40 text-slate-300 hover:text-white font-medium text-sm transition flex items-center gap-3 border border-transparent hover:border-slate-800">
+                    <i class="fas fa-envelope-open-text text-base opacity-75"></i> Support Desk
+                </button>
+                <button onclick="showSection('profile')" id="navProfile" class="w-full text-left p-3.5 rounded-2xl hover:bg-slate-800/40 text-slate-300 hover:text-white font-medium text-sm transition flex items-center gap-3 border border-transparent hover:border-slate-800">
+                    <i class="fas fa-id-card text-base opacity-75"></i> Operator Profile
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar footer: User + Logout -->
+        <div>
+            <button onclick="logout()" class="w-full text-left p-3.5 rounded-2xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold text-sm transition flex items-center gap-3 border border-transparent hover:border-red-500/20">
+                <i class="fas fa-sign-out-alt text-base"></i> Close Operator
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto h-screen hidden" id="mainApp">
+        
+        <!-- Header Controls (Greeting + Quick Theme Toggle) -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase">System Dashboard</span>
+                <h2 class="text-2xl md:text-3xl font-black" id="dashGreeting">Welcome, Operator</h2>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Theme Switcher Button -->
+                <button onclick="toggleTheme()" class="w-10 h-10 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/50 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 shadow-sm transition-all" title="Toggle Display Theme">
+                    <div id="themeIcon">
+                        <i class="fas fa-moon text-base"></i>
+                    </div>
+                </button>
+                
+                <!-- Simple Mobile Menu Button -->
+                <button onclick="logout()" class="md:hidden w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl flex items-center justify-center transition-all" title="Logout">
+                    <i class="fas fa-power-off text-base"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================ -->
+        <!-- SYSTEM METRIC STATS PANEL (GRID) -->
+        <!-- ============================================ -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Metric 1: Total Items -->
+            <div class="glass-card p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between h-[120px]">
+                <div class="flex justify-between items-start">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Shelf Items</span>
+                    <i class="fas fa-database text-indigo-500 opacity-60 text-lg"></i>
+                </div>
+                <h3 id="statTotal" class="text-2xl md:text-3xl font-black">0</h3>
+            </div>
+            
+            <!-- Metric 2: Low Stock Items -->
+            <div class="glass-card p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between h-[120px]">
+                <div class="flex justify-between items-start">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Low Stock Levels</span>
+                    <i class="fas fa-triangle-exclamation text-orange-500 opacity-60 text-lg"></i>
+                </div>
+                <h3 id="statLow" class="text-2xl md:text-3xl font-black text-orange-500">0</h3>
+            </div>
+            
+            <!-- Metric 3: Expired Items -->
+            <div class="glass-card p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between h-[120px]">
+                <div class="flex justify-between items-start">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Expired Products</span>
+                    <i class="fas fa-circle-xmark text-red-500 opacity-60 text-lg"></i>
+                </div>
+                <h3 id="statExp" class="text-2xl md:text-3xl font-black text-red-500">0</h3>
+            </div>
+            
+            <!-- Metric 4: Financial Revenue / Personal Spend -->
+            <div class="glass-card p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between h-[120px]">
+                <div class="flex justify-between items-start">
+                    <span id="revenueMetricLabel" class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pharmacy Revenue</span>
+                    <i class="fas fa-wallet text-emerald-500 opacity-60 text-lg"></i>
+                </div>
+                <h3 id="statRev" class="text-2xl md:text-3xl font-black text-emerald-500">$0.00</h3>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- VIEW SECTION: SHELF / INVENTORY -->
+        <!-- ============================================ -->
+        <section id="inventorySection" class="space-y-6">
+            <!-- Search & Actions -->
+            <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <!-- Search bar input -->
+                <div class="relative max-w-xl w-full">
+                    <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"></i>
+                    <input type="text" id="dbSearch" placeholder="Search medicines by name or category..." 
+                           class="w-full pl-12 pr-4 py-4 bg-white/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/40 rounded-2xl shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white">
+                </div>
+                
+                <!-- Action Tools -->
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadCSV()" id="exportBtn" class="hidden bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700/50 px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all">
+                        <i class="fas fa-file-csv text-base text-green-500"></i> Export CSV
+                    </button>
+                    <button onclick="exportInventoryReport()" id="reportBtn" class="hidden bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700/50 px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all">
+                        <i class="fas fa-download text-base text-indigo-500"></i> Download Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pharmacy: Add Stock Panel (Hidden from Customers) -->
+            <div id="pharmacyOnly" class="hidden glass-card p-6 md:p-8 rounded-[2.5rem] border border-indigo-100 relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                
+                <h3 class="font-extrabold text-lg text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                    <i class="fas fa-folder-plus text-indigo-500"></i> Insert Medicine to Inventory
+                </h3>
+                
+                <form id="medForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Medicine Name</label>
+                        <input type="text" id="mName" placeholder="Paracetamol 500mg" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Category</label>
+                        <input type="text" id="mCat" placeholder="Analgesics" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Price ($)</label>
+                        <input type="number" id="mPrice" step="0.01" placeholder="4.99" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Initial Stock</label>
+                        <input type="number" id="mStock" placeholder="100" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Expiration Date</label>
+                        <input type="date" id="mExp" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all" required>
+                    </div>
+                    
+                    <button type="submit" class="md:col-span-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm p-4 transition shadow-md shadow-indigo-500/10 active:scale-[0.98] mt-5 self-end">
+                        <i class="fas fa-save mr-1.5"></i> Commit Stock Entry
+                    </button>
+                </form>
+            </div>
+
+            <!-- Medicines Shelf Listing -->
+            <div id="medList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- VIEW SECTION: ORDER HISTORY (Customer Only) -->
+        <!-- ============================================ -->
+        <section id="historySection" class="hidden space-y-6 max-w-5xl mx-auto">
+            <div class="glass-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-28 h-28 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                
+                <h3 class="font-extrabold text-2xl text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                    <i class="fas fa-clipboard-list text-indigo-500"></i> Customer Order History
+                </h3>
+                <p class="text-sm text-slate-400 dark:text-slate-400 mb-6">Review invoices and records of transactions made under this profile.</p>
+                
+                <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                    <table class="w-full text-left bg-white/40 dark:bg-slate-900/30">
+                        <thead class="bg-slate-100 dark:bg-slate-800/50 uppercase text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                            <tr>
+                                <th class="p-4">Transaction Date</th>
+                                <th class="p-4">Medicine Item</th>
+                                <th class="p-4">Amount Paid</th>
+                                <th class="p-4 text-center">Receipt Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderList" class="text-sm divide-y divide-slate-100 dark:divide-slate-800/80">
+                            <!-- Injected Dynamically -->
+                            <tr>
+                                <td colspan="4" class="text-center p-8 text-slate-400">No transactions recorded.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- VIEW SECTION: ANALYTICS (Pharmacy Only) -->
+        <!-- ============================================ -->
+        <section id="analyticsSection" class="hidden space-y-8 max-w-6xl mx-auto">
+            <div>
+                <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase">Performance Metrics</span>
+                <h3 class="text-3xl font-extrabold text-slate-800 dark:text-white">Active Stock Insights</h3>
+                <p class="text-sm text-slate-400 dark:text-slate-400">Quantitative charts and breakdowns regarding shelf operations.</p>
+            </div>
+
+            <!-- Insights Overview Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Insight 1: Inventory Value -->
+                <div class="glass-card p-6 rounded-[2.5rem] text-center flex flex-col justify-center items-center h-[160px]">
+                    <div class="bg-indigo-500/10 p-3 rounded-full text-indigo-500 mb-3"><i class="fas fa-boxes-stacked text-xl"></i></div>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Gross Shelf Value</span>
+                    <h3 id="anaTotalValue" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">$0.00</h3>
+                </div>
+                
+                <!-- Insight 2: Average price -->
+                <div class="glass-card p-6 rounded-[2.5rem] text-center flex flex-col justify-center items-center h-[160px]">
+                    <div class="bg-emerald-500/10 p-3 rounded-full text-emerald-500 mb-3"><i class="fas fa-tag text-xl"></i></div>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Avg. Item Price</span>
+                    <h3 id="anaAvgPrice" class="text-2xl font-black text-emerald-500 mt-1">$0.00</h3>
+                </div>
+                
+                <!-- Insight 3: Stock Health percentage -->
+                <div class="glass-card p-6 rounded-[2.5rem] text-center flex flex-col justify-center items-center h-[160px]">
+                    <div class="bg-orange-500/10 p-3 rounded-full text-orange-500 mb-3"><i class="fas fa-heart-pulse text-xl"></i></div>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Stock Health</span>
+                    <h3 id="anaHealth" class="text-2xl font-black text-orange-500 mt-1">0%</h3>
+                </div>
+            </div>
+
+            <!-- Breakdown Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Category stock counts -->
+                <div class="glass-card p-8 rounded-[2.5rem] flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-extrabold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                            <i class="fas fa-chart-column text-indigo-500"></i> Category Breakdown
+                        </h4>
+                        <div id="categoryList" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                            <!-- Injected Dynamically -->
+                            <p class="text-slate-400 text-sm">No items configured.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report generator tools -->
+                <div class="glass-card p-8 rounded-[2.5rem] flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-extrabold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                            <i class="fas fa-print text-indigo-500"></i> Document Center
+                        </h4>
+                        <div class="space-y-3">
+                            <button onclick="exportInventoryReport()" class="w-full p-4 bg-white/40 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 rounded-2xl text-left text-xs font-bold transition flex justify-between items-center">
+                                Export Full Inventory Report <i class="fas fa-file-invoice-dollar text-base"></i>
+                            </button>
+                            <button onclick="showSection('inventory'); document.getElementById('dbSearch').value = 'Low';" class="w-full p-4 bg-white/40 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-500 rounded-2xl text-left text-xs font-bold transition flex justify-between items-center">
+                                Review Low Stock Warning Shelves <i class="fas fa-circle-exclamation text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-6 mt-6">
+                        <p class="text-xs text-slate-400 dark:text-slate-500">PharmaNet Pro compiles standard CSVs and TXT formatted print logs on-demand. Make sure to download at the end of each session shift.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- VIEW SECTION: FEEDBACK CENTER -->
+        <!-- ============================================ -->
+        <section id="feedbackSection" class="hidden max-w-3xl mx-auto space-y-6">
+            <div class="glass-card p-8 rounded-[2.5rem] border border-indigo-50 text-center relative overflow-hidden">
+                <div class="absolute -top-12 -left-12 w-28 h-28 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                
+                <div class="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-inner mx-auto mb-4 border border-indigo-500/20">
+                    <i class="fas fa-headset"></i>
+                </div>
+                
+                <h3 class="font-extrabold text-2xl text-slate-800 dark:text-white">Operator Support Center</h3>
+                <p class="text-sm text-slate-400 dark:text-slate-400 mt-1">Direct communication bridge between customers and operators.</p>
+                
+                <!-- CUSTOMER VIEW: SEND MESSAGES -->
+                <div id="customerFeedbackView" class="hidden mt-8 space-y-4 text-left border-t border-slate-100 dark:border-slate-800 pt-6">
+                    <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200">Submit Direct Feedback</h4>
+                    <p class="text-xs text-slate-400">Encountered an issue or have a restocking recommendation? Log a query directly with our pharmacists.</p>
+                    <div>
+                        <textarea id="feedbackText" placeholder="Write your message detail here..." 
+                                  class="w-full p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white min-h-[140px] transition-all"></textarea>
+                    </div>
+                    <button onclick="submitFeedback()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-500/10 active:scale-[0.98]">
+                        <i class="fas fa-paper-plane mr-1.5"></i> Dispatch Message
+                    </button>
+                </div>
+
+                <!-- PHARMACY VIEW: FEEDBACK INBOX -->
+                <div id="pharmacyFeedbackView" class="hidden mt-8 text-left border-t border-slate-100 dark:border-slate-800 pt-6">
+                    <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fas fa-inbox text-indigo-500"></i> Direct Message Inbox
+                    </h4>
+                    <div id="feedbackInbox" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Injected Dynamically -->
+                        <p class="text-slate-400 text-sm text-center py-6">No queries logged in the system.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- VIEW SECTION: USER PROFILE -->
+        <!-- ============================================ -->
+        <section id="profileSection" class="hidden max-w-md mx-auto space-y-6">
+            <div class="glass-card p-8 rounded-[2.5rem] text-center relative overflow-hidden border border-slate-100 dark:border-slate-800/80">
+                <div class="absolute -top-12 -right-12 w-28 h-28 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                
+                <div class="relative w-24 h-24 mx-auto mb-6">
+                    <div class="w-full h-full bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center text-4xl border border-indigo-500/20">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-1.5 border-4 border-white dark:border-slate-900 shadow-md">
+                        <i class="fas fa-shield-halved text-[10px]"></i>
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-black text-slate-800 dark:text-white" id="profName">Name</h3>
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-4 py-1.5 rounded-full mt-2 inline-block border border-indigo-500/20">Active Operator</span>
+                
+                <div class="mt-8 space-y-4 text-left border-t border-slate-100 dark:border-slate-800/80 pt-6">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Operator Duty</span>
+                        <span id="profRole" class="font-extrabold capitalize text-slate-700 dark:text-slate-200">Pharmacy Owner</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Duty Email</span>
+                        <span id="profEmail" class="font-extrabold text-slate-700 dark:text-slate-200">operator@pharma.net</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Assigned License</span>
+                        <span class="text-emerald-500 font-extrabold flex items-center gap-1"><i class="fas fa-circle-check text-[10px]"></i> Local Level-1</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- SPA & Actions Scripts (served from root directory statically since express.static covers public/) -->
+    <script src="router.js"></script>
+    <script src="reports.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
