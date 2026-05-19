@@ -265,13 +265,12 @@ app.get('/*splat', (req, res) => {
 });
 
 // --- 3. DATABASE CONNECTION & SERVER START ---
-const PORT = process.env.PORT || 5000;
 const mongoURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/pharma_network";
 
+// Connect to MongoDB asynchronously
 mongoose.connect(mongoURI)
     .then(async () => {
         console.log("✅ MongoDB Connected Successfully");
-        
         // Auto-clean any old conflicting indexes on the users collection from previous projects
         try {
             await mongoose.connection.db.collection('users').dropIndexes();
@@ -279,10 +278,17 @@ mongoose.connect(mongoURI)
         } catch (e) {
             // Collection doesn't exist yet, ignore
         }
-
-        app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
     })
     .catch(err => {
         console.error("❌ DB Connection Error:");
         console.error(err.message);
     });
+
+// Dual-Mode Startup: Only call app.listen() if NOT running in the Vercel Serverless environment
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Server running locally on port ${PORT}`));
+}
+
+// Export the Express app for Vercel Serverless Handler
+module.exports = app;
